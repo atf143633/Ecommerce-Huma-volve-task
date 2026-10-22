@@ -6,6 +6,7 @@ import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 class ApiClient {
   Dio dio;
   ApiClient() : dio = Dio(BaseOptions(baseUrl: ApiConstant.baseUrl)) {
+    // الي راجع بشكل احسن تقدر تتابع منه المشكله بكول سهوله Response يعرض الي 
     dio.interceptors.add(
       PrettyDioLogger(
         requestHeader: true,
