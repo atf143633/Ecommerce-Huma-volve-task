@@ -1,10 +1,9 @@
-import 'package:ecommerce_app_huma_volve/features/home/Cubit/home_cubit.dart';
-import 'package:ecommerce_app_huma_volve/features/home/Cubit/home_state.dart';
+import 'package:ecommerce_app_huma_volve/features/home/presentaton/view_model/home_cubit.dart';
+import 'package:ecommerce_app_huma_volve/features/home/presentaton/view_model/home_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../../../core/dummy_data.dart';
-import '../../../core/theme.dart';
+import '../../../../core/dummy_data.dart';
+import '../../../../core/theme.dart';
 import 'widgets/product_card.dart';
 import 'widgets/category_chip.dart';
 
@@ -59,8 +58,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         CircleAvatar(
                           radius: 24,
-                          backgroundImage: NetworkImage(
-                            dummyUser.profilePictureUrl,
+                          backgroundColor: Colors.grey.shade200,
+                          child: ClipOval(
+                            child: Image.network(
+                              dummyUser.profilePictureUrl,
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.person_outline),
+                            ),
                           ),
                         ),
                       ],
@@ -135,6 +142,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           return Center(child: Text(state.errorMassege));
                         } else if (state is CategoiresSuccess) {
                           final categories = state.categories;
+                          if (categories.isEmpty) {
+                            return const SizedBox(
+                              height: 44,
+                              child: Center(child: Text('No categories found')),
+                            );
+                          }
                           return SizedBox(
                             height: 44,
                             child: ListView.separated(
@@ -145,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               itemBuilder: (context, index) {
                                 final category = categories[index];
                                 return CategoryChip(
-                                  label: category.name ?? "all",
+                                  label: category.name,
                                   isSelected: _selectedCategoryIndex == index,
                                   onTap: () {
                                     setState(() {
@@ -153,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     });
                                     context
                                         .read<HomeCubit>()
-                                        .getProductCategories(category.id!);
+                                        .getProductCategories(category.id);
                                   },
                                 );
                               },
@@ -169,15 +182,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             BlocBuilder<HomeCubit, HomeState>(
-              buildWhen: (previous, current) {
-                if (current is ProductsLoading ||
-                    current is ProductsSuccess ||
-                    current is ProductsError) {
-                  return false;
-                } else {
-                  return true;
-                }
-              },
+              buildWhen: (previous, current) =>
+                  current is ProductsLoading ||
+                  current is ProductsSuccess ||
+                  current is ProductsError,
               builder: (context, state) {
                 if (state is ProductsLoading) {
                   return const SliverToBoxAdapter(
@@ -189,6 +197,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 } else if (state is ProductsSuccess) {
                   final products = state.products;
+                  if (products.isEmpty) {
+                    return const SliverToBoxAdapter(
+                      child: Center(child: Text('No products found')),
+                    );
+                  }
                   return SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     sliver: SliverGrid(
