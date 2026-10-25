@@ -4,7 +4,7 @@ class HomeProductEntites {
   final int id;
   final String title;
   final String slug;
-  final int price;
+  final double price;
   final String description;
   final HomeCategoryEntites category;
   final List<String> images;
@@ -16,6 +16,6 @@ class HomeProductEntites {
     this.price = 0,
     this.description = '',
     this.category = const HomeCategoryEntites(),
-    this.images = const [''],
+    this.images = const [],
   });
 }

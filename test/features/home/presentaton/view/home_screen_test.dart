@@ -15,7 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('renders products returned by the repository', (tester) async {
-    await _pumpHome(
+    final repository = await _pumpHome(
       tester,
       products: [
         HomeProductEntites(
@@ -28,6 +28,7 @@ void main() {
     );
 
     expect(find.text('Mountain T-shirt'), findsOneWidget);
+    expect(repository.productRequests, [(categoryId: 1, limit: 10, offset: 0)]);
   });
 
   testWidgets('shows an empty state when no products are returned', (
@@ -129,6 +130,7 @@ class _HomeRepository implements HomeRepo {
   final Completer<Either<Failure, List<HomeProductEntites>>>? productsCompleter;
   final Failure? productFailure;
   final requestedCategoryIds = <int?>[];
+  final productRequests = <({int categoryId, int limit, int offset})>[];
 
   @override
   Future<Either<Failure, List<HomeCategoryEntites>>> getCategoriesRepo() async {
@@ -137,9 +139,12 @@ class _HomeRepository implements HomeRepo {
 
   @override
   Future<Either<Failure, List<HomeProductEntites>>> getProductsRepo(
-    int? categoryId,
-  ) async {
+    int categoryId, {
+    required int limit,
+    required int offset,
+  }) async {
     requestedCategoryIds.add(categoryId);
+    productRequests.add((categoryId: categoryId, limit: limit, offset: offset));
     if (productsCompleter != null) {
       return productsCompleter!.future;
     }

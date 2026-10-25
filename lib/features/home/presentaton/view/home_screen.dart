@@ -2,7 +2,6 @@ import 'package:ecommerce_app_huma_volve/features/home/presentaton/view_model/ho
 import 'package:ecommerce_app_huma_volve/features/home/presentaton/view_model/home_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/dummy_data.dart';
 import '../../../../core/theme.dart';
 import 'widgets/product_card.dart';
 import 'widgets/category_chip.dart';
@@ -16,10 +15,29 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedCategoryIndex = 0;
+  late final ScrollController scrollController;
   @override
   void initState() {
-    context.read<HomeCubit>().loadHomeData();
     super.initState();
+    scrollController = ScrollController();
+    scrollController.addListener(_onListen);
+    context.read<HomeCubit>().loadHomeData();
+  }
+
+  @override
+  void dispose() {
+    scrollController
+      ..removeListener(_onListen)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onListen() {
+    if (scrollController.hasClients &&
+        scrollController.position.pixels >=
+            scrollController.position.maxScrollExtent) {
+      context.read<HomeCubit>().loadMoreProducts();
+    }
   }
 
   @override
@@ -28,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: CustomScrollView(
+          controller: scrollController,
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
@@ -59,16 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         CircleAvatar(
                           radius: 24,
                           backgroundColor: Colors.grey.shade200,
-                          child: ClipOval(
-                            child: Image.network(
-                              dummyUser.profilePictureUrl,
-                              width: 48,
-                              height: 48,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.person_outline),
-                            ),
-                          ),
+                          child: const Icon(Icons.person_outline),
                         ),
                       ],
                     ),
@@ -129,7 +139,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       buildWhen: (previous, current) {
                         if (current is ProductsLoading ||
                             current is ProductsSuccess ||
-                            current is ProductsError) {
+                            current is ProductsError ||
+                            current is ProductLoadingError ||
+                            current is ProductLoadingMore) {
                           return false;
                         } else {
                           return true;
@@ -137,9 +149,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                       builder: (BuildContext context, state) {
                         if (state is CategoriesLoading) {
-                          return Center(child: CircularProgressIndicator());
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
                         } else if (state is CategoiresError) {
-                          return Center(child: Text(state.errorMassege));
+                          return Center(
+                            child: Column(
+                              children: [
+                                Text(state.errorMassege),
+                                TextButton(
+                                  onPressed: context
+                                      .read<HomeCubit>()
+                                      .loadHomeData,
+                                  child: const Text('Retry'),
+                                ),
+                              ],
+                            ),
+                          );
                         } else if (state is CategoiresSuccess) {
                           final categories = state.categories;
                           if (categories.isEmpty) {
@@ -182,10 +208,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             BlocBuilder<HomeCubit, HomeState>(
-              buildWhen: (previous, current) =>
-                  current is ProductsLoading ||
-                  current is ProductsSuccess ||
-                  current is ProductsError,
+              buildWhen: (previous, current) {
+                if (current is ProductLoadingError ||
+                    current is ProductLoadingMore) {
+                  return false;
+                }
+                return true;
+              },
               builder: (context, state) {
                 if (state is ProductsLoading) {
                   return const SliverToBoxAdapter(
@@ -193,7 +222,26 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 } else if (state is ProductsError) {
                   return SliverToBoxAdapter(
-                    child: Center(child: Text(state.errorMassege)),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Text(state.errorMassege),
+                          TextButton(
+                            onPressed: () {
+                              final categoryId = context
+                                  .read<HomeCubit>()
+                                  .selectedCategory;
+                              if (categoryId != null) {
+                                context.read<HomeCubit>().getProductCategories(
+                                  categoryId,
+                                );
+                              }
+                            },
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 } else if (state is ProductsSuccess) {
                   final products = state.products;
@@ -219,6 +267,39 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 } else {
                   return const SliverToBoxAdapter(child: SizedBox.shrink());
+                }
+              },
+            ),
+            BlocBuilder<HomeCubit, HomeState>(
+              builder: (context, state) {
+                if (state is ProductLoadingMore) {
+                  return const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(25),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  );
+                } else if (state is ProductLoadingError) {
+                  return SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Text(state.errorMassege),
+                            TextButton(
+                              onPressed: context
+                                  .read<HomeCubit>()
+                                  .loadMoreProducts,
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                } else {
+                  return const SliverToBoxAdapter(child: SizedBox(height: 24));
                 }
               },
             ),

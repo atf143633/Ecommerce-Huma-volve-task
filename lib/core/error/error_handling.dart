@@ -3,86 +3,42 @@ import 'package:ecommerce_app_huma_volve/core/failure/failure.dart';
 
 class ErrorHandling {
   static Failure handle(dynamic exception) {
-    // if (exception is FirebaseException) {
-    //   return _handleFirebaseError(exception);
-    // }
-
     if (exception is DioException) {
-      return _handleRemoteError(exception.toString());
+      return _handleRemoteError(exception);
     }
-    // if (exception is localException) {
-    //   return Failure(failureMessage: exception.errormessage);
-    // }
-    return Failure(failureMessage: 'un Expected Error');
+    if (exception is FormatException || exception is TypeError) {
+      return const Failure(failureMessage: 'Invalid data received from server');
+    }
+    return const Failure(failureMessage: 'Unexpected error');
   }
 
-  static Failure _handleRemoteError(String message) {
-    final errorMessage = message.trim();
+  static Failure _handleRemoteError(DioException exception) {
+    switch (exception.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return const Failure(failureMessage: 'Request timed out');
+      case DioExceptionType.connectionError:
+        return const Failure(
+          failureMessage: 'Network connection failed. Check your connection.',
+        );
+      default:
+        break;
+    }
 
-    if (errorMessage.contains('401') ||
-        errorMessage.contains('Unauthorized') ||
-        errorMessage.contains('Unauthenticated')) {
-      return const Failure(failureMessage: "Unauthorized");
+    final statusCode = exception.response?.statusCode;
+    if (statusCode != null) {
+      final message = switch (statusCode) {
+        401 => 'Unauthorized',
+        403 => 'Forbidden',
+        404 => 'Not Found',
+        422 => 'Invalid request',
+        >= 500 => 'Server error ($statusCode)',
+        _ => 'Request failed ($statusCode)',
+      };
+      return Failure(failureMessage: message);
     }
-    ;
-    if (errorMessage.contains('403') || errorMessage.contains('Forbidden')) {
-      return const Failure(failureMessage: "Forbidden");
-    }
-    if (errorMessage.contains('404') || errorMessage.contains('Not Found')) {
-      return const Failure(failureMessage: "Not Found");
-    }
-    if (errorMessage.contains('422') ||
-        errorMessage.contains('Unprocessable Contebt')) {
-      return const Failure(failureMessage: "Unprocessable Contebt");
-    }
-    if (errorMessage.contains('500') ||
-        errorMessage.contains('Internal Server Error')) {
-      return const Failure(failureMessage: "Internal Server Error");
-    }
-    if (errorMessage.contains('SocketException') ||
-        errorMessage.contains('Connection failed') ||
-        errorMessage.contains('HandshakeException')) {
-      return const Failure(failureMessage: "SocketException");
-    }
-    if (errorMessage.contains('Timeout') || errorMessage.contains('Deadline')) {
-      return const Failure(failureMessage: 'Deadline');
-    }
-    if (errorMessage.contains('TypeError') ||
-        errorMessage.contains('FormatException')) {
-      return const Failure(failureMessage: "FormatException");
-    }
-    if (errorMessage.isEmpty &&
-        errorMessage.contains('Eception') &&
-        errorMessage.contains('Error')) {
-      return Failure(failureMessage: 'Error');
-    }
-    return const Failure(failureMessage: "Eception");
+
+    return const Failure(failureMessage: 'Network request failed');
   }
 }
-
-// static Failure _handleFirebaseErrorndle(FirebaseException exception) {
-//   switch (exception.code) {
-//     case 'invalid-credential':
-//       return const Failure(failureMessage: AppStrings.ivalidLoginCerdentials);
-//     case 'user-not-found':
-//       return const Failure(failureMessage: AppStrings.accountNotFound);
-//     case 'invalid-email':
-//       return const Failure(failureMessage: AppStrings.ivalidEmailFormat);
-//     case 'user-disabeld':
-//       return const Failure(failureMessage: AppStrings.accountDisabled);
-
-//       // الاخطاء العامه
-//       case 'permission-denied' :
-//       return const Failure(failureMessage: AppString.unauthorized);
-//       case 'unavailable' :
-//       return const Failure(failureMessage: AppString.noServerConnection);
-//       case 'not-found' :
-//       return const Failure(failureMessage: AppString.dataNotFound);
-//       case 'deadline-exceeded' :
-//       return const Failure(failureMessage: AppString.connectionTimeout);
-
-//       default:
-//         return Failure(exception.message ?? AppString.databaseConnectionError);
-//   }
-
-//}

@@ -35,3 +35,11 @@ class ProductsError extends HomeState {
 
   ProductsError(this.errorMassege);
 }
+class ProductLoadingMore extends HomeState {
+  ProductLoadingMore();
+}
+class ProductLoadingError extends HomeState {
+  final String errorMassege;
+
+  ProductLoadingError({required this.errorMassege});
+}

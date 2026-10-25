@@ -1,4 +1,3 @@
-
 import 'package:ecommerce_app_huma_volve/features/home/domain/entites/home_products_entites.dart';
 import 'package:flutter/material.dart';
 import '../../../core/theme.dart';
@@ -61,10 +60,24 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             flexibleSpace: FlexibleSpaceBar(
               background: Hero(
                 tag: 'product-${widget.productModel.id}',
-                child: Image.network(
-                  widget.productModel.images[0],
-                  fit: BoxFit.cover,
-                ),
+                child: widget.productModel.images.isEmpty
+                    ? const ColoredBox(
+                        color: AppTheme.background,
+                        child: Center(
+                          child: Icon(Icons.image_not_supported_outlined),
+                        ),
+                      )
+                    : Image.network(
+                        widget.productModel.images.first,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const ColoredBox(
+                              color: AppTheme.background,
+                              child: Center(
+                                child: Icon(Icons.image_not_supported_outlined),
+                              ),
+                            ),
+                      ),
               ),
             ),
           ),
@@ -108,7 +121,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      widget.productModel.description ,
+                      widget.productModel.description,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         height: 1.6,
                         fontSize: 16,

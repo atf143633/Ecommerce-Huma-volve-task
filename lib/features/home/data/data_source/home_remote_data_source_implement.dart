@@ -10,23 +10,41 @@ class HomeRemoteDataSourceImplement implements HomeRemoteDataSource {
   @override
   Future<List<HomeModel>> getCategories() async {
     final response = await apiClient.dio.get(ApiEndpoint.categoriesEndpoint);
-    final List jsonData = response.data;
-    final List<HomeModel> categories = jsonData
-        .map((e) => HomeModel.fromJson(e))
-        .toList();
-    return categories;
+    return _parseList(response.data, HomeModel.fromJson, 'categories');
   }
 
   @override
-  Future<List<HomeProductModel>> getProducts(int? categoryId) async {
+  Future<List<HomeProductModel>> getProducts(
+    int categoryId, {
+    required int limit,
+    required int offset,
+  }) async {
     final response = await apiClient.dio.get(
       "${ApiEndpoint.categoriesEndpoint}/$categoryId/${ApiEndpoint.productsEndpoint}",
+      queryParameters: {"limit": limit, "offset": offset},
     );
-    final List jsonData = response.data;
-    final List<HomeProductModel> products = jsonData
-        .map((e) => HomeProductModel.fromJson(e))
-        .toList();
 
-    return products;
+    return _parseList(response.data, HomeProductModel.fromJson, 'products');
+  }
+
+  List<T> _parseList<T>(
+    dynamic data,
+    T Function(Map<String, dynamic>) fromJson,
+    String resource,
+  ) {
+    if (data is! List) {
+      throw FormatException('Expected the $resource response to be a list.');
+    }
+
+    return data
+        .map((item) {
+          if (item is! Map<String, dynamic>) {
+            throw FormatException(
+              'Expected each item in the $resource response to be an object.',
+            );
+          }
+          return fromJson(item);
+        })
+        .toList(growable: false);
   }
 }
