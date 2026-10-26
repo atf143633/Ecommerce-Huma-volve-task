@@ -1,7 +1,9 @@
 import 'package:ecommerce_app_huma_volve/features/home/domain/entites/home_products_entites.dart';
+import 'package:ecommerce_app_huma_volve/core/widgets/remote_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../../core/routes/app_routing.dart';
 import '../../../../../core/theme.dart';
-import '../../../../details/screens/product_details_screen.dart';
 
 class ProductCard extends StatelessWidget {
   // final Product product;
@@ -12,16 +14,10 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          PageRouteBuilder(
-            transitionDuration: const Duration(milliseconds: 500),
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                ProductDetailsScreen(productModel: productModel),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(opacity: animation, child: child);
-                },
+        context.push(
+          AppRouting.productLocation(
+            productModel.id,
+            queryParameters: {'categoryId': '${productModel.category.id}'},
           ),
         );
       },
@@ -58,8 +54,8 @@ class ProductCard extends StatelessWidget {
                                 child: Icon(Icons.image_not_supported_outlined),
                               ),
                             )
-                          : Image.network(
-                              productModel.images.first,
+                          : RemoteImage(
+                              url: productModel.images.first,
                               fit: BoxFit.cover,
                               width: double.infinity,
                               height: double.infinity,

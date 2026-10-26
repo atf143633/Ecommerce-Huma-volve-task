@@ -92,6 +92,7 @@ class ProfileScreen extends StatelessWidget {
                     isDestructive: true,
                     onTap: () async {
                       await SecureStorage.deletTokens();
+                      if (!context.mounted) return;
                       Navigator.pushReplacement(
                         context,
                         PageRouteBuilder(

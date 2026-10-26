@@ -58,7 +58,10 @@ void main() {
                     'price': 69.5,
                     'description': 'A responsive controller.',
                     'category': {'id': 2, 'name': 'Electronics'},
-                    'images': ['https://example.com/controller.jpg'],
+                    'images': [
+                      'https://example.com/controller.jpg',
+                      'https://placehold.co/600x400?img=20790',
+                    ],
                   },
                 ],
               ),
@@ -78,9 +81,50 @@ void main() {
       expect(products.single.title, 'Wireless Controller');
       expect(products.single.price, 69.5);
       expect(products.single.category.name, 'Electronics');
-      expect(products.single.images, ['https://example.com/controller.jpg']);
+      expect(products.single.images, [
+        'https://example.com/controller.jpg',
+        'https://placehold.co/600x400.png?img=20790',
+      ]);
     },
   );
+
+  test('requests and maps a product by ID', () async {
+    final dio = Dio(BaseOptions(baseUrl: ApiConstant.baseUrl));
+    RequestOptions? request;
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          request = options;
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'id': 18,
+                'title': 'Wireless Controller',
+                'slug': 'wireless-controller',
+                'price': 69.5,
+                'description': 'A responsive controller.',
+                'category': {'id': 2, 'name': 'Electronics'},
+                'images': ['https://example.com/controller.jpg'],
+              },
+            ),
+          );
+        },
+      ),
+    );
+
+    final dataSource = HomeRemoteDataSourceImplement(
+      apiClient: ApiClient()..dio = dio,
+    );
+    final product = await dataSource.getProductById(18);
+
+    expect(request?.method, 'GET');
+    expect(request?.path, 'products/18');
+    expect(product.id, 18);
+    expect(product.title, 'Wireless Controller');
+    expect(product.category.id, 2);
+  });
 
   test('rejects a non-list API response as invalid data', () async {
     final dio = Dio(BaseOptions(baseUrl: ApiConstant.baseUrl));

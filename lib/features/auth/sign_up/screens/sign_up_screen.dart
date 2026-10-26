@@ -133,7 +133,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             password: passwordController.text,
                           ),
                         );
-                        if (!mounted) return;
+                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('SignUp Successful Plz login'),
@@ -147,7 +147,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         );
                       } on DioException catch (e) {
-                        if (!mounted) return;
+                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(e.toString()),

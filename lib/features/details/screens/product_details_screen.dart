@@ -1,7 +1,8 @@
 import 'package:ecommerce_app_huma_volve/features/home/domain/entites/home_products_entites.dart';
 import 'package:flutter/material.dart';
+import '../../../core/widgets/remote_image.dart';
 import '../../../core/theme.dart';
-
+import '../widgets/share_product_button.dart';
 import '../../../core/widgets/primary_button.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
@@ -55,6 +56,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 ),
                 onPressed: () {},
               ),
+              ShareProductButton(productId: widget.productModel.id),
               const SizedBox(width: 8),
             ],
             flexibleSpace: FlexibleSpaceBar(
@@ -67,8 +69,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           child: Icon(Icons.image_not_supported_outlined),
                         ),
                       )
-                    : Image.network(
-                        widget.productModel.images.first,
+                    : RemoteImage(
+                        url: widget.productModel.images.first,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
                             const ColoredBox(

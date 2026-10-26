@@ -14,6 +14,19 @@ class HomeRemoteDataSourceImplement implements HomeRemoteDataSource {
   }
 
   @override
+  Future<HomeProductModel> getProductById(int productId) async {
+    final response = await apiClient.dio.get(
+      '${ApiEndpoint.productsEndpoint}/$productId',
+    );
+    if (response.data is! Map<String, dynamic>) {
+      throw const FormatException(
+        'Expected the product response to be an object.',
+      );
+    }
+    return HomeProductModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
   Future<List<HomeProductModel>> getProducts(
     int categoryId, {
     required int limit,

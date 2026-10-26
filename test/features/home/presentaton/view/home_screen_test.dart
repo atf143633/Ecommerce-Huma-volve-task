@@ -138,6 +138,13 @@ class _HomeRepository implements HomeRepo {
   }
 
   @override
+  Future<Either<Failure, HomeProductEntites>> getProductByIdRepo(
+    int productId,
+  ) async {
+    return const Left(Failure(failureMessage: 'Not found'));
+  }
+
+  @override
   Future<Either<Failure, List<HomeProductEntites>>> getProductsRepo(
     int categoryId, {
     required int limit,

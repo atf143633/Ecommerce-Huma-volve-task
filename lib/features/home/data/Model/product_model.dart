@@ -35,9 +35,22 @@ class HomeProductModel extends HomeProductEntites {
       price: price.toDouble(),
       description: _requiredString(json, 'description'),
       category: HomeModel.fromJson(category),
-      images: List<String>.unmodifiable(images.cast<String>()),
+      images: List<String>.unmodifiable(
+        images.cast<String>().map(_flutterCompatibleImageUrl),
+      ),
     );
   }
+}
+
+String _flutterCompatibleImageUrl(String imageUrl) {
+  final uri = Uri.tryParse(imageUrl);
+  if (uri == null ||
+      uri.host.toLowerCase() != 'placehold.co' ||
+      !RegExp(r'^/\d+x\d+$').hasMatch(uri.path)) {
+    return imageUrl;
+  }
+
+  return uri.replace(path: '${uri.path}.png').toString();
 }
 
 int _requiredInt(Map<String, dynamic> json, String key) {

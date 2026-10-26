@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ecommerce_app_huma_volve/core/storage/secure_storage.dart';
 import 'package:ecommerce_app_huma_volve/features/main_navigation/screens/main_navigation_screen.dart';
 import 'package:flutter/material.dart';
@@ -12,14 +14,18 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  Timer? _navigationTimer;
+
   @override
   void initState() {
     super.initState();
-    _navigateToNext();
+    _navigationTimer = Timer(
+      const Duration(seconds: 2),
+      () => unawaited(_navigateToNext()),
+    );
   }
 
   Future<void> _navigateToNext() async {
-    await Future.delayed(const Duration(seconds: 2));
     final accesssToken = await SecureStorage.getAccessToken();
     final refreshToken = await SecureStorage.getRefreshToken();
     if (mounted) {
@@ -45,6 +51,12 @@ class _SplashScreenState extends State<SplashScreen> {
       );
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _navigationTimer?.cancel();
+    super.dispose();
   }
 
   @override
